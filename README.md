@@ -1,10 +1,6 @@
 <div align="center">
 
-<img src="https://github.com/CephasTechOrg/DATA-SHARE/blob/main/images/Screenshot_27-10-2025_224045_127.0.0.1.jpeg" 
-     alt="Data Reseller Banner" 
-     width="100%" 
-     height="280px" 
-     style="object-fit:cover;border-radius:15px;" />
+
 
 # 💾 **DATA RESELLER PLATFORM**
 ### Reliable. Scalable. Secure.

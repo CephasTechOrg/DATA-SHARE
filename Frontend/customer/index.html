@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExtraData - Buy MTN Data Bundles</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Enhanced Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-container">
+            <div class="loading-logo">
+                <div class="logo-pulse">
+                    <i class="fas fa-bolt"></i>
+                </div>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+            <div class="loading-text">
+                <h3>ExtraData</h3>
+                <p>Preparing your data experience...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h2>ExtraData</h2>
+                </div>
+                <div class="nav-links">
+                    <a href="#bundles" class="nav-link">Bundles</a>
+                    <a href="#how-it-works" class="nav-link">How It Works</a>
+                    <a href="#contact" class="nav-link">Contact</a>
+                </div>
+                <div class="mobile-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Enhanced Hero Section -->
+    <section class="hero">
+        <div class="hero-background">
+            <div class="hero-shape hero-shape-1"></div>
+            <div class="hero-shape hero-shape-2"></div>
+            <div class="hero-shape hero-shape-3"></div>
+            <div class="hero-shape hero-shape-4"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>⚡ Instant Delivery • 24/7 Support</span>
+                </div>
+                <h1 class="hero-title">
+                    Super-Fast MTN
+                    <span class="gradient-text">Data Bundles</span>
+                </h1>
+                <p class="hero-description">
+                    Get your data delivered instantly to your phone. Fast, reliable, and affordable data bundles for all
+                    your needs. Never expires!
+                </p>
+                <div class="hero-actions">
+                    <button class="cta-button primary" onclick="scrollToBundles()">
+                        <span>Buy Data Now</span>
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                    <button class="cta-button secondary" onclick="scrollToBundles()">
+                        <span>View Bundles</span>
+                        <i class="fas fa-chart-bar"></i>
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number" data-count="5000">0</div>
+                        <div class="stat-label">Happy Customers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" data-count="99">0</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Support</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-phone">
+                    <div class="phone-mockup">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="app-interface">
+                                <div class="app-header">
+                                    <i class="fas fa-signal"></i>
+                                    <span>MTN Data</span>
+                                    <i class="fas fa-wifi"></i>
+                                </div>
+                                <div class="app-data">
+                                    <div class="data-amount">10GB</div>
+                                    <div class="data-duration">30 Days</div>
+                                    <div class="data-price">GHS 25.00</div>
+                                    <div class="data-badge">
+                                        <i class="fas fa-infinity"></i>
+                                        Non-Expiry
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enhanced Bundles Section -->
+    <section id="bundles" class="bundles-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Data Plans</div>
+                <h2 class="section-title">Choose Your Data Bundle</h2>
+                <p class="section-subtitle">Affordable prices with instant delivery to your MTN number</p>
+            </div>
+
+            <div class="bundles-grid" id="bundlesGrid">
+                <!-- Bundles will be loaded here -->
+                <div class="bundle-skeleton">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-price"></div>
+                    <div class="skeleton-button"></div>
+                </div>
+                <div class="bundle-skeleton">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-price"></div>
+                    <div class="skeleton-button"></div>
+                </div>
+                <div class="bundle-skeleton">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-price"></div>
+                    <div class="skeleton-button"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enhanced How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Process</div>
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">Get your data in 3 simple steps</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Choose Bundle</h3>
+                    <p>Select your preferred MTN data bundle from our affordable options</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3>Make Payment</h3>
+                    <p>Pay securely via MTN Mobile Money with instant confirmation</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Get Data</h3>
+                    <p>Receive your data bundle instantly or within 1-4 hours maximum</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enhanced Order Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Order Data Bundle</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="orderForm" class="modal-form">
+                <input type="hidden" id="selectedBundleId">
+                <div class="form-group">
+                    <label for="customerName">Full Name</label>
+                    <input type="text" id="customerName" required placeholder="Enter your full name">
+                    <i class="fas fa-user form-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumber">MTN Phone Number</label>
+                    <input type="tel" id="phoneNumber" required placeholder="e.g., 0241234567">
+                    <i class="fas fa-phone form-icon"></i>
+                </div>
+                <div class="bundle-summary">
+                    <h4>Order Summary</h4>
+                    <div id="bundleSummary" class="summary-content"></div>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Place Order</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Enhanced Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Complete Payment</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="payment-details">
+                <div id="paymentSummary" class="payment-summary"></div>
+                <div class="payment-methods">
+                    <h4>Payment Method</h4>
+                    <div class="payment-option active" data-method="mtn-momo">
+                        <div class="payment-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="payment-info">
+                            <span class="payment-name">MTN Mobile Money</span>
+                            <span class="payment-desc">Pay with your MTN MoMo wallet</span>
+                        </div>
+                        <div class="payment-check">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                </div>
+                <button id="confirmPayment" class="payment-btn">
+                    <i class="fas fa-lock"></i>
+                    <span>Pay with MoMo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content success-content">
+            <div class="success-animation">
+                <div class="success-circle">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="success-rings">
+                    <div class="ring ring-1"></div>
+                    <div class="ring ring-2"></div>
+                    <div class="ring ring-3"></div>
+                </div>
+            </div>
+            <h2>Order Successful!</h2>
+            <p>Your MTN data bundle from ExtraData will be delivered within 1–4 hours.</p>
+            <p>Thank you for choosing ExtraData.</p>
+            <button id="closeSuccess" class="success-btn">Close</button>
+        </div>
+    </div>
+
+    <!-- Enhanced Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h2>ExtraData</h2>
+                    </div>
+                    <p>Instant MTN data bundles delivered straight to your phone. Never expires!</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Quick Links</h4>
+                        <a href="#bundles">Data Bundles</a>
+                        <a href="#how-it-works">How It Works</a>
+                        <a href="#contact">Support</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Support</h4>
+                        <a href="#">Help Center</a>
+                        <a href="#">Contact Us</a>
+                        <a href="#">FAQ</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Features</h4>
+                        <a href="#">Non-Expiry Data</a>
+                        <a href="#">Instant Delivery</a>
+                        <a href="#">24/7 Support</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ExtraData. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="scripts/script.js"></script>
+</body>
+
+</html>

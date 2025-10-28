@@ -7,44 +7,108 @@
     <title>Admin Portal - ExtraData</title>
     <link rel="stylesheet" href="styles/style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 
 <body>
+    <!-- Loading Screen -->
+    <div id="adminLoadingScreen" class="loading-screen">
+        <div class="loading-container">
+            <div class="loading-logo">
+                <div class="logo-pulse">
+                    <i class="fas fa-cog"></i>
+                </div>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+            <div class="loading-text">
+                <h3>ExtraData Admin</h3>
+                <p>Loading admin dashboard...</p>
+            </div>
+        </div>
+    </div>
+
     <div class="admin-container">
-        <!-- Sidebar -->
+        <!-- Enhanced Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-database"></i> ExtraData</h2>
-                <p>Admin Portal</p>
+                <div class="admin-logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h2>ExtraData</h2>
+                        <p>Admin Portal</p>
+                    </div>
+                </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="#dashboard" class="nav-item active" data-tab="dashboard">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                    <div class="nav-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <span class="nav-text">Dashboard</span>
+                    <div class="nav-indicator"></div>
                 </a>
                 <a href="#bundles" class="nav-item" data-tab="bundles">
-                    <i class="fas fa-box"></i> Bundles
+                    <div class="nav-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <span class="nav-text">Bundles</span>
+                    <div class="nav-indicator"></div>
                 </a>
                 <a href="#orders" class="nav-item" data-tab="orders">
-                    <i class="fas fa-shopping-cart"></i> Orders
+                    <div class="nav-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <span class="nav-text">Orders</span>
+                    <div class="nav-indicator"></div>
                 </a>
                 <a href="#payments" class="nav-item" data-tab="payments">
-                    <i class="fas fa-credit-card"></i> Payments
+                    <div class="nav-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <span class="nav-text">Payments</span>
+                    <div class="nav-indicator"></div>
                 </a>
             </nav>
+            <div class="sidebar-footer">
+                <div class="admin-profile">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="profile-info">
+                        <span class="profile-name">Admin User</span>
+                        <span class="profile-role">Administrator</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Header -->
+            <!-- Enhanced Header -->
             <header class="admin-header">
                 <div class="header-left">
+                    <div class="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </div>
                     <h1 id="pageTitle">Dashboard</h1>
                 </div>
                 <div class="header-right">
-                    <button class="btn btn-primary" onclick="populateBundles()">
-                        <i class="fas fa-sync"></i> Populate Bundles
-                    </button>
-                    <span class="admin-user">Admin User</span>
+                    <div class="header-actions">
+                        <button class="btn btn-gradient" onclick="populateBundles()">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Populate Bundles</span>
+                        </button>
+                        <div class="notification-bell">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -52,47 +116,127 @@
             <div id="dashboard" class="tab-content active">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-shopping-cart"></i>
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-trend up">
+                                <i class="fas fa-arrow-up"></i>
+                                12%
+                            </div>
                         </div>
-                        <div class="stat-info">
+                        <div class="stat-content">
                             <h3 id="totalOrders">0</h3>
                             <p>Total Orders</p>
                         </div>
+                        <div class="stat-footer">
+                            <span class="stat-change">+5 today</span>
+                        </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-credit-card"></i>
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="stat-trend up">
+                                <i class="fas fa-arrow-up"></i>
+                                8%
+                            </div>
                         </div>
-                        <div class="stat-info">
+                        <div class="stat-content">
                             <h3 id="totalPayments">0</h3>
                             <p>Total Payments</p>
                         </div>
+                        <div class="stat-footer">
+                            <span class="stat-change">+3 today</span>
+                        </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-trend down">
+                                <i class="fas fa-arrow-down"></i>
+                                5%
+                            </div>
                         </div>
-                        <div class="stat-info">
+                        <div class="stat-content">
                             <h3 id="pendingOrders">0</h3>
                             <p>Pending Orders</p>
                         </div>
+                        <div class="stat-footer">
+                            <span class="stat-change">-2 today</span>
+                        </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle"></i>
+                        <div class="stat-header">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-trend up">
+                                <i class="fas fa-arrow-up"></i>
+                                15%
+                            </div>
                         </div>
-                        <div class="stat-info">
+                        <div class="stat-content">
                             <h3 id="completedPayments">0</h3>
                             <p>Completed Payments</p>
+                        </div>
+                        <div class="stat-footer">
+                            <span class="stat-change">+4 today</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="recent-activity">
-                    <h3>Recent Orders</h3>
-                    <div class="activity-list" id="recentOrders">
-                        <!-- Recent orders will be loaded here -->
+                <div class="dashboard-content">
+                    <div class="recent-activity">
+                        <div class="activity-header">
+                            <h3>Recent Orders</h3>
+                            <a href="#orders" class="view-all" onclick="switchTab('orders')">
+                                View All <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                        <div class="activity-list" id="recentOrders">
+                            <!-- Recent orders will be loaded here -->
+                            <div class="activity-skeleton">
+                                <div class="skeleton-avatar"></div>
+                                <div class="skeleton-content">
+                                    <div class="skeleton-line"></div>
+                                    <div class="skeleton-line short"></div>
+                                </div>
+                                <div class="skeleton-badge"></div>
+                            </div>
+                            <div class="activity-skeleton">
+                                <div class="skeleton-avatar"></div>
+                                <div class="skeleton-content">
+                                    <div class="skeleton-line"></div>
+                                    <div class="skeleton-line short"></div>
+                                </div>
+                                <div class="skeleton-badge"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="quick-info">
+                                <h4>Revenue</h4>
+                                <p>GHS <span id="totalRevenue">0.00</span></p>
+                            </div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="quick-info">
+                                <h4>Customers</h4>
+                                <p><span id="totalCustomers">0</span> Active</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -100,12 +244,32 @@
             <!-- Bundles Tab -->
             <div id="bundles" class="tab-content">
                 <div class="section-header">
-                    <h2>Manage Bundles</h2>
-                    <button class="btn btn-primary" onclick="openAddBundleModal()">
-                        <i class="fas fa-plus"></i> Add Bundle
+                    <div class="section-title">
+                        <h2>Manage Bundles</h2>
+                        <p>Create and manage data bundle offerings</p>
+                    </div>
+                    <button class="btn btn-gradient" onclick="openAddBundleModal()">
+                        <i class="fas fa-plus"></i>
+                        <span>Add Bundle</span>
                     </button>
                 </div>
                 <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Search bundles..." id="bundleSearch">
+                            </div>
+                            <div class="table-filters">
+                                <select id="networkFilter">
+                                    <option value="">All Networks</option>
+                                    <option value="MTN">MTN</option>
+                                    <option value="Vodafone">Vodafone</option>
+                                    <option value="AirtelTigo">AirtelTigo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -114,6 +278,7 @@
                                 <th>Size</th>
                                 <th>Price (GHS)</th>
                                 <th>Network</th>
+                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -127,9 +292,34 @@
             <!-- Orders Tab -->
             <div id="orders" class="tab-content">
                 <div class="section-header">
-                    <h2>Manage Orders</h2>
+                    <div class="section-title">
+                        <h2>Manage Orders</h2>
+                        <p>View and process customer orders</p>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn btn-outline">
+                            <i class="fas fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Search orders..." id="orderSearch">
+                            </div>
+                            <div class="table-filters">
+                                <select id="statusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -137,6 +327,7 @@
                                 <th>Customer</th>
                                 <th>Phone</th>
                                 <th>Bundle</th>
+                                <th>Amount</th>
                                 <th>Status</th>
                                 <th>Date</th>
                                 <th>Actions</th>
@@ -152,9 +343,34 @@
             <!-- Payments Tab -->
             <div id="payments" class="tab-content">
                 <div class="section-header">
-                    <h2>Manage Payments</h2>
+                    <div class="section-title">
+                        <h2>Manage Payments</h2>
+                        <p>Monitor and manage payment transactions</p>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn btn-outline">
+                            <i class="fas fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Search payments..." id="paymentSearch">
+                            </div>
+                            <div class="table-filters">
+                                <select id="paymentStatusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -176,33 +392,44 @@
         </div>
     </div>
 
-    <!-- Add Bundle Modal -->
+    <!-- Enhanced Add Bundle Modal -->
     <div id="addBundleModal" class="modal">
+        <div class="modal-backdrop"></div>
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Add New Bundle</h2>
-            <form id="addBundleForm">
+            <div class="modal-header">
+                <h2>Add New Bundle</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="addBundleForm" class="modal-form">
                 <div class="form-group">
                     <label for="bundleName">Bundle Name</label>
-                    <input type="text" id="bundleName" required>
+                    <input type="text" id="bundleName" required placeholder="Enter bundle name">
+                    <i class="fas fa-tag form-icon"></i>
                 </div>
                 <div class="form-group">
                     <label for="bundleSize">Size</label>
-                    <input type="text" id="bundleSize" required>
+                    <input type="text" id="bundleSize" required placeholder="e.g., 10GB">
+                    <i class="fas fa-weight form-icon"></i>
                 </div>
                 <div class="form-group">
                     <label for="bundlePrice">Price (GHS)</label>
-                    <input type="number" id="bundlePrice" step="0.01" required>
+                    <input type="number" id="bundlePrice" step="0.01" required placeholder="0.00">
+                    <i class="fas fa-money-bill form-icon"></i>
                 </div>
                 <div class="form-group">
                     <label for="bundleNetwork">Network</label>
                     <select id="bundleNetwork" required>
+                        <option value="">Select Network</option>
                         <option value="MTN">MTN</option>
                         <option value="Vodafone">Vodafone</option>
                         <option value="AirtelTigo">AirtelTigo</option>
                     </select>
+                    <i class="fas fa-network-wired form-icon"></i>
                 </div>
-                <button type="submit" class="btn btn-primary">Add Bundle</button>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeAddBundleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-gradient">Add Bundle</button>
+                </div>
             </form>
         </div>
     </div>

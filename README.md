@@ -2,7 +2,7 @@
 
 
 
-# 💾 **DATA RESELLER PLATFORM**
+# 💾 **DATA SHARE PLATFORM**
 ### Reliable. Scalable. Secure.
 
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&pause=1000&color=00FFFF&center=true&vCenter=true&width=650&lines=Automating+Data+Sales+and+Delivery;FastAPI+%2B+PostgreSQL+Powered;Simple+Frontend,+Powerful+Backend)](https://git.io/typing-svg)

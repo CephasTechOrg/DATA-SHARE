@@ -217,52 +217,45 @@
                     <i class="fas fa-user form-icon"></i>
                 </div>
                 <div class="form-group">
-                    <label for="phoneNumber">MTN Phone Number</label>
-                    <input type="tel" id="phoneNumber" required placeholder="e.g., 0241234567">
-                    <i class="fas fa-phone form-icon"></i>
+                    <label for="recipientPhone">Phone Number (to receive bundle)</label>
+                    <input type="tel" id="recipientPhone" required placeholder="e.g., 0241234567">
+                    <i class="fas fa-sim-card form-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="payerPhone">Phone Number (for payment)</label>
+                    <input type="tel" id="payerPhone" required placeholder="e.g., 0551234567">
+                    <i class="fas fa-mobile-alt form-icon"></i>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="sameAsRecipient" onchange="copyRecipientPhone()">
+                        <label for="sameAsRecipient" class="checkbox-label">Same as above</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="customerEmail">Email (optional)</label>
+                    <input type="email" id="customerEmail" placeholder="your@email.com">
+                    <i class="fas fa-envelope form-icon"></i>
                 </div>
                 <div class="bundle-summary">
                     <h4>Order Summary</h4>
                     <div id="bundleSummary" class="summary-content"></div>
                 </div>
                 <button type="submit" class="submit-btn">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Place Order</span>
+                    <i class="fas fa-credit-card"></i>
+                    <span>Proceed to Pay</span>
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Enhanced Payment Modal -->
-    <div id="paymentModal" class="modal">
+    <!-- Loading Modal (for payment processing) -->
+    <div id="processingModal" class="modal">
         <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Complete Payment</h2>
-                <span class="close">&times;</span>
+        <div class="modal-content processing-content">
+            <div class="processing-animation">
+                <div class="spinner"></div>
             </div>
-            <div class="payment-details">
-                <div id="paymentSummary" class="payment-summary"></div>
-                <div class="payment-methods">
-                    <h4>Payment Method</h4>
-                    <div class="payment-option active" data-method="mtn-momo">
-                        <div class="payment-icon">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <div class="payment-info">
-                            <span class="payment-name">MTN Mobile Money</span>
-                            <span class="payment-desc">Pay with your MTN MoMo wallet</span>
-                        </div>
-                        <div class="payment-check">
-                            <i class="fas fa-check"></i>
-                        </div>
-                    </div>
-                </div>
-                <button id="confirmPayment" class="payment-btn">
-                    <i class="fas fa-lock"></i>
-                    <span>Pay with MoMo</span>
-                </button>
-            </div>
+            <h3>Processing Payment...</h3>
+            <p>Please wait while we initialize your payment</p>
         </div>
     </div>
 
@@ -280,9 +273,12 @@
                     <div class="ring ring-3"></div>
                 </div>
             </div>
-            <h2>Order Successful!</h2>
-            <p>Your MTN data bundle from ExtraData will be delivered within 1–4 hours.</p>
+            <h2>Payment Successful!</h2>
+            <p id="successMessage">Your MTN data bundle from ExtraData will be delivered within 1–4 hours.</p>
             <p>Thank you for choosing ExtraData.</p>
+            <div id="orderDetails" class="order-receipt">
+                <!-- Order details will be populated here -->
+            </div>
             <button id="closeSuccess" class="success-btn">Close</button>
         </div>
     </div>
@@ -332,6 +328,8 @@
         </div>
     </footer>
 
+    <!-- Paystack Inline JS -->
+    <script src="https://js.paystack.co/v2/inline.js"></script>
     <script src="scripts/script.js"></script>
 </body>
 

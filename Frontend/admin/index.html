@@ -84,6 +84,9 @@
                         <span class="profile-name">Admin User</span>
                         <span class="profile-role">Administrator</span>
                     </div>
+                    <button class="logout-btn" onclick="adminLogout()" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -108,6 +111,10 @@
                             <i class="fas fa-bell"></i>
                             <span class="notification-badge">3</span>
                         </div>
+                        <button class="btn btn-outline logout-header-btn" onclick="adminLogout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -294,7 +301,7 @@
                 <div class="section-header">
                     <div class="section-title">
                         <h2>Manage Orders</h2>
-                        <p>View and process customer orders</p>
+                        <p>Process active orders and track completed history</p>
                     </div>
                     <div class="section-actions">
                         <button class="btn btn-outline">
@@ -312,31 +319,67 @@
                             </div>
                             <div class="table-filters">
                                 <select id="statusFilter">
-                                    <option value="">All Status</option>
+                                    <option value="">All Order Queues</option>
+                                    <option value="queue">Order Queue</option>
+                                    <option value="history">Completed History</option>
                                     <option value="pending">Pending</option>
+                                    <option value="processing">Processing</option>
                                     <option value="completed">Completed</option>
                                     <option value="failed">Failed</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th>Bundle</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ordersTable">
-                            <!-- Orders will be loaded here -->
-                        </tbody>
-                    </table>
+                    <div class="orders-grid">
+                        <div class="orders-panel">
+                            <div class="orders-panel-header">
+                                <h3>Order Queue <span id="activeOrderCount" class="count-pill">0</span></h3>
+                                <p>Orders to process now</p>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Customer</th>
+                                        <th>Send To</th>
+                                        <th>Paying No.</th>
+                                        <th>Bundle</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTable">
+                                    <!-- Active orders will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="orders-panel">
+                            <div class="orders-panel-header">
+                                <h3>Completed History <span id="completedOrderCount" class="count-pill success">0</span></h3>
+                                <p>Orders marked as completed</p>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Customer</th>
+                                        <th>Send To</th>
+                                        <th>Bundle</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Completed On</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="completedOrdersTable">
+                                    <!-- Completed orders history will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -429,6 +472,48 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-outline" onclick="closeAddBundleModal()">Cancel</button>
                     <button type="submit" class="btn btn-gradient">Add Bundle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Bundle Modal -->
+    <div id="editBundleModal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Bundle</h2>
+                <span class="close" onclick="closeEditBundleModal()">&times;</span>
+            </div>
+            <form id="editBundleForm" class="modal-form">
+                <input type="hidden" id="editBundleId">
+                <div class="form-group">
+                    <label for="editBundleName">Bundle Name</label>
+                    <input type="text" id="editBundleName" required placeholder="Enter bundle name">
+                    <i class="fas fa-tag form-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="editBundleSize">Size</label>
+                    <input type="text" id="editBundleSize" required placeholder="e.g., 10GB">
+                    <i class="fas fa-weight form-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="editBundlePrice">Price (GHS)</label>
+                    <input type="number" id="editBundlePrice" step="0.01" required placeholder="0.00">
+                    <i class="fas fa-money-bill form-icon"></i>
+                </div>
+                <div class="form-group">
+                    <label for="editBundleNetwork">Network</label>
+                    <select id="editBundleNetwork" required>
+                        <option value="MTN">MTN</option>
+                        <option value="Vodafone">Vodafone</option>
+                        <option value="AirtelTigo">AirtelTigo</option>
+                    </select>
+                    <i class="fas fa-network-wired form-icon"></i>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeEditBundleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-gradient">Save Changes</button>
                 </div>
             </form>
         </div>

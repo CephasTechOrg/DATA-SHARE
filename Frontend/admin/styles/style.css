@@ -768,6 +768,58 @@ body {
     overflow: hidden;
 }
 
+.orders-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.orders-panel {
+    background: var(--background-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.orders-panel-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--background);
+}
+
+.orders-panel-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.orders-panel-header p {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--primary-dark);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.count-pill.success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
 .table-header {
     padding: 1.5rem;
     border-bottom: 1px solid var(--border);
@@ -776,7 +828,7 @@ body {
 
 .table-actions {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     gap: 1rem;
 }
@@ -836,6 +888,7 @@ body {
     padding: 1rem 1.5rem;
     text-align: left;
     border-bottom: 1px solid var(--border);
+    vertical-align: middle;
 }
 
 .data-table th {
@@ -857,6 +910,42 @@ body {
 
 .data-table tr:last-child td {
     border-bottom: none;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bundle-info,
+.customer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.bundle-name,
+.customer-name {
+    font-weight: 600;
+}
+
+.bundle-meta,
+.payment-method {
+    font-size: 0.82rem;
+    color: var(--text-light);
+}
+
+.network-badge,
+.bundle-size {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-dark);
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
 /* Enhanced Status Badges */
@@ -1188,6 +1277,14 @@ body {
         padding: 1rem;
     }
 
+    .section-title h2 {
+        font-size: 1.45rem;
+    }
+
+    .section-title p {
+        font-size: 0.9rem;
+    }
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
@@ -1201,6 +1298,62 @@ body {
     .table-actions {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .table-header {
+        padding: 1rem;
+    }
+
+    .data-table,
+    .data-table thead,
+    .data-table tbody,
+    .data-table th,
+    .data-table td,
+    .data-table tr {
+        display: block;
+        width: 100%;
+    }
+
+    .data-table thead {
+        display: none;
+    }
+
+    .data-table tr {
+        padding: 0.75rem;
+        margin: 0.75rem;
+        background: var(--background);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+    }
+
+    .data-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.55rem 0.25rem;
+        border-bottom: 1px dashed var(--border);
+        font-size: 0.9rem;
+    }
+
+    .data-table td:last-child {
+        border-bottom: none;
+    }
+
+    .data-table td::before {
+        content: attr(data-label);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--text-light);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .action-buttons {
+        justify-content: flex-end;
+        width: 100%;
     }
 
     .search-box {
@@ -1261,6 +1414,39 @@ body {
 
 .mt-3 {
     margin-top: 3rem;
+}
+
+/* Logout Button Styles */
+.logout-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: none;
+    color: #ef4444;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-left: auto;
+}
+
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(1.1);
+}
+
+.admin-profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logout-header-btn {
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+}
+
+.logout-header-btn:hover {
+    background: var(--danger) !important;
+    color: white !important;
 }
 
 /* Scrollbar Styling */

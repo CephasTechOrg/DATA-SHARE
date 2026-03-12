@@ -1,12 +1,108 @@
 // API Base URL - Use the same as your backend
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
+// Auth Token Key (must match auth.js)
+const TOKEN_KEY = 'extradata_admin_token';
+const USER_KEY = 'extradata_admin_user';
+
 // Current state
 let currentTab = 'dashboard';
+let cachedBundles = [];
+
+function formatCurrency(amount) {
+    return `GHS ${Number(amount || 0).toFixed(2)}`;
+}
+
+function formatDateTime(dateValue) {
+    if (!dateValue) return 'N/A';
+    return new Date(dateValue).toLocaleString();
+}
+
+function getOrderAmount(order) {
+    return Number(order?.bundle?.price || 0);
+}
+
+function getOrderRecipient(order) {
+    return order?.recipient_phone || order?.phone_number || 'N/A';
+}
+
+function getOrderPayer(order) {
+    return order?.payer_phone || order?.phone_number || 'N/A';
+}
+
+// ==================== AUTH CHECK ====================
+
+// Check authentication before anything else
+function checkAuth() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+        window.location.href = 'login.html';
+        return false;
+    }
+    return true;
+}
+
+// Get auth headers for API calls
+function getAuthHeaders() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+// Handle unauthorized response
+function handleUnauthorized() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    window.location.href = 'login.html';
+}
+
+// Logout function
+function adminLogout() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
+    window.location.href = 'login.html';
+}
+
+// ==================== INITIALIZE ====================
 
 // Initialize admin portal
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     console.log('Admin portal loaded');
+    
+    // Check authentication first
+    if (!checkAuth()) {
+        return;
+    }
+
+    // Verify token with server
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/verify-token`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (!response.ok) {
+            handleUnauthorized();
+            return;
+        }
+    } catch (error) {
+        console.error('Auth verification failed:', error);
+        handleUnauthorized();
+        return;
+    }
+
+    // Update UI with username
+    const username = localStorage.getItem(USER_KEY);
+    if (username) {
+        const profileName = document.querySelector('.profile-name');
+        if (profileName) {
+            profileName.textContent = username;
+        }
+    }
+
     initializeAdmin();
     setupEventListeners();
     loadDashboard();
@@ -50,11 +146,13 @@ function hideAdminLoading() {
 function setupEventListeners() {
     // Add bundle form
     document.getElementById('addBundleForm').addEventListener('submit', handleAddBundle);
+    document.getElementById('editBundleForm').addEventListener('submit', handleEditBundle);
 
     // Modal close buttons
     document.querySelectorAll('.close').forEach(closeBtn => {
         closeBtn.addEventListener('click', function () {
             document.getElementById('addBundleModal').style.display = 'none';
+            closeEditBundleModal();
         });
     });
 
@@ -99,8 +197,17 @@ function debounce(func, wait) {
 // Handle search
 function handleSearch(e) {
     const searchTerm = e.target.value.toLowerCase();
-    const currentTable = document.querySelector(`#${currentTab}Table`);
+    if (currentTab === 'orders') {
+        const activeRows = document.querySelectorAll('#ordersTable tr');
+        const completedRows = document.querySelectorAll('#completedOrdersTable tr');
+        [...activeRows, ...completedRows].forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+        return;
+    }
 
+    const currentTable = document.querySelector(`#${currentTab}Table`);
     if (currentTable) {
         const rows = currentTable.getElementsByTagName('tr');
         Array.from(rows).forEach(row => {
@@ -112,7 +219,33 @@ function handleSearch(e) {
 
 // Handle filter
 function handleFilter(e) {
-    // Reload data with filters
+    if (currentTab === 'orders' && e.target.id === 'statusFilter') {
+        const value = e.target.value;
+        const queuePanel = document.querySelector('.orders-panel:first-child');
+        const historyPanel = document.querySelector('.orders-panel:last-child');
+
+        if (!queuePanel || !historyPanel) {
+            return;
+        }
+
+        queuePanel.style.display = (value === 'history') ? 'none' : 'block';
+        historyPanel.style.display = (value === 'queue') ? 'none' : 'block';
+
+        const rowMatcher = (row) => {
+            const rowText = row.textContent.toLowerCase();
+            if (!value || value === 'queue' || value === 'history') return true;
+            return rowText.includes(value.toLowerCase());
+        };
+
+        document.querySelectorAll('#ordersTable tr').forEach(row => {
+            row.style.display = rowMatcher(row) ? '' : 'none';
+        });
+        document.querySelectorAll('#completedOrdersTable tr').forEach(row => {
+            row.style.display = rowMatcher(row) ? '' : 'none';
+        });
+        return;
+    }
+
     switch (currentTab) {
         case 'bundles':
             loadBundles();
@@ -177,20 +310,43 @@ function switchTab(tabName) {
 async function loadDashboard() {
     try {
         console.log('Loading dashboard data...');
-        const response = await fetch(`${API_BASE_URL}/admin/dashboard`);
+        const [dashboardResponse, ordersResponse, paymentsResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/admin/dashboard`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/orders/`),
+            fetch(`${API_BASE_URL}/payments/`)
+        ]);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (dashboardResponse.status === 401) {
+            handleUnauthorized();
+            return;
         }
 
-        const data = await response.json();
-        console.log('Dashboard data:', data);
+        if (!dashboardResponse.ok || !ordersResponse.ok || !paymentsResponse.ok) {
+            throw new Error('Failed to load dashboard aggregates');
+        }
+
+        const dashboardData = await dashboardResponse.json();
+        const orders = await ordersResponse.json();
+        const payments = await paymentsResponse.json();
+
+        const completedOrders = orders.filter(order => order.status === 'completed');
+        const pendingOrders = orders.filter(order => order.status === 'pending' || order.status === 'processing');
+        const revenue = completedOrders.reduce((sum, order) => sum + getOrderAmount(order), 0);
+        const uniqueCustomers = new Set(
+            orders
+                .map(order => `${order.customer_name || ''}-${getOrderRecipient(order)}`)
+                .filter(Boolean)
+        ).size;
 
         // Animate stats counting up
-        animateCounter('totalOrders', data.total_orders || 0);
-        animateCounter('totalPayments', data.total_payments || 0);
-        animateCounter('pendingOrders', data.pending_orders || 0);
-        animateCounter('completedPayments', data.completed_payments || 0);
+        animateCounter('totalOrders', orders.length || dashboardData.total_orders || 0);
+        animateCounter('totalPayments', payments.length || dashboardData.total_payments || 0);
+        animateCounter('pendingOrders', pendingOrders.length || dashboardData.pending_orders || 0);
+        animateCounter('completedPayments', completedOrders.length || dashboardData.completed_payments || 0);
+
+        // Quick stats
+        document.getElementById('totalRevenue').textContent = revenue.toFixed(2);
+        document.getElementById('totalCustomers').textContent = uniqueCustomers;
 
         // Load recent orders
         await loadRecentOrders();
@@ -249,7 +405,7 @@ async function loadRecentOrders() {
             <div class="activity-item">
                 <div class="activity-info">
                     <h4>${order.customer_name}</h4>
-                    <p>${order.bundle ? order.bundle.name : 'N/A'} - ${order.phone_number}</p>
+                    <p>${order.bundle ? order.bundle.name : 'N/A'} • ${getOrderRecipient(order)}</p>
                 </div>
                 <div class="activity-status">
                     <span class="status-badge status-${order.status}">${order.status}</span>
@@ -282,6 +438,7 @@ async function loadBundles() {
 
         const bundles = await response.json();
         console.log('Bundles loaded:', bundles);
+        cachedBundles = bundles;
 
         const tableBody = document.getElementById('bundlesTable');
 
@@ -305,23 +462,26 @@ async function loadBundles() {
 
         tableBody.innerHTML = bundles.map(bundle => `
             <tr>
-                <td><strong>#${bundle.id}</strong></td>
-                <td>
+                <td data-label="ID"><strong>#${bundle.id}</strong></td>
+                <td data-label="Name">
                     <div class="bundle-info">
                         <div class="bundle-name">${bundle.name}</div>
                         <div class="bundle-meta">${bundle.network}</div>
                     </div>
                 </td>
-                <td><span class="bundle-size">${bundle.size}</span></td>
-                <td><strong>GHS ${bundle.price.toFixed(2)}</strong></td>
-                <td>
+                <td data-label="Size"><span class="bundle-size">${bundle.size}</span></td>
+                <td data-label="Price"><strong>${formatCurrency(bundle.price)}</strong></td>
+                <td data-label="Network">
                     <span class="network-badge">${bundle.network}</span>
                 </td>
-                <td>
+                <td data-label="Status">
                     <span class="status-badge status-completed">Active</span>
                 </td>
-                <td>
+                <td data-label="Actions">
                     <div class="action-buttons">
+                        <button class="btn btn-outline btn-sm" onclick="openEditBundleModalById(${bundle.id})" title="Edit Bundle">
+                            <i class="fas fa-pen"></i>
+                        </button>
                         <button class="btn btn-danger btn-sm" onclick="deleteBundle(${bundle.id})" title="Delete Bundle">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -349,12 +509,13 @@ async function loadOrders() {
         const orders = await response.json();
         console.log('Orders loaded:', orders);
 
-        const tableBody = document.getElementById('ordersTable');
+        const activeTableBody = document.getElementById('ordersTable');
+        const completedTableBody = document.getElementById('completedOrdersTable');
 
         if (!orders || orders.length === 0) {
-            tableBody.innerHTML = `
+            activeTableBody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 3rem;">
+                    <td colspan="9" style="text-align: center; padding: 3rem;">
                         <div style="text-align: center; color: var(--text-light);">
                             <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
                             <h3 style="margin-bottom: 0.5rem;">No orders found</h3>
@@ -363,33 +524,84 @@ async function loadOrders() {
                     </td>
                 </tr>
             `;
+            completedTableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-light);">
+                        No completed orders yet.
+                    </td>
+                </tr>
+            `;
+            document.getElementById('activeOrderCount').textContent = '0';
+            document.getElementById('completedOrderCount').textContent = '0';
             return;
         }
 
-        tableBody.innerHTML = orders.map(order => `
+        const sortedOrders = [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const activeOrders = sortedOrders.filter(order => order.status !== 'completed');
+        const completedOrders = sortedOrders.filter(order => order.status === 'completed');
+
+        document.getElementById('activeOrderCount').textContent = `${activeOrders.length}`;
+        document.getElementById('completedOrderCount').textContent = `${completedOrders.length}`;
+
+        activeTableBody.innerHTML = activeOrders.length ? activeOrders.map(order => `
             <tr>
-                <td><strong>#${order.id}</strong></td>
-                <td>
+                <td data-label="ID"><strong>#${order.id}</strong></td>
+                <td data-label="Customer">
                     <div class="customer-info">
                         <div class="customer-name">${order.customer_name}</div>
                     </div>
                 </td>
-                <td>${order.phone_number}</td>
-                <td>${order.bundle ? order.bundle.name : 'N/A'}</td>
-                <td><strong>GHS ${order.bundle ? order.bundle.price.toFixed(2) : '0.00'}</strong></td>
-                <td>
+                <td data-label="Send To">${getOrderRecipient(order)}</td>
+                <td data-label="Paying No.">${getOrderPayer(order)}</td>
+                <td data-label="Bundle">${order.bundle ? `${order.bundle.name} (${order.bundle.size || ''})` : 'N/A'}</td>
+                <td data-label="Amount"><strong>${formatCurrency(getOrderAmount(order))}</strong></td>
+                <td data-label="Status">
                     <span class="status-badge status-${order.status}">${order.status}</span>
                 </td>
-                <td>${new Date(order.created_at).toLocaleDateString()}</td>
-                <td>
+                <td data-label="Date">${formatDateTime(order.created_at)}</td>
+                <td data-label="Actions">
                     <div class="action-buttons">
                         <button class="btn btn-success btn-sm" onclick="updateOrderStatus(${order.id}, 'completed')" title="Complete Order">
                             <i class="fas fa-check"></i>
                         </button>
+                        <button class="btn btn-outline btn-sm" onclick="updateOrderStatus(${order.id}, 'processing')" title="Mark Processing">
+                            <i class="fas fa-spinner"></i>
+                        </button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `).join('') : `
+            <tr>
+                <td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-light);">
+                    No active orders in queue.
+                </td>
+            </tr>
+        `;
+
+        completedTableBody.innerHTML = completedOrders.length ? completedOrders.map(order => `
+            <tr>
+                <td data-label="ID"><strong>#${order.id}</strong></td>
+                <td data-label="Customer">${order.customer_name}</td>
+                <td data-label="Send To">${getOrderRecipient(order)}</td>
+                <td data-label="Bundle">${order.bundle ? `${order.bundle.name} (${order.bundle.size || ''})` : 'N/A'}</td>
+                <td data-label="Amount"><strong>${formatCurrency(getOrderAmount(order))}</strong></td>
+                <td data-label="Status"><span class="status-badge status-completed">completed</span></td>
+                <td data-label="Completed On">${formatDateTime(order.created_at)}</td>
+                <td data-label="Actions">
+                    <div class="action-buttons">
+                        <button class="btn btn-outline btn-sm" onclick="updateOrderStatus(${order.id}, 'pending')" title="Move back to queue">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('') : `
+            <tr>
+                <td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-light);">
+                    No completed orders yet.
+                </td>
+            </tr>
+        `;
 
     } catch (error) {
         console.error('Error loading orders:', error);
@@ -429,17 +641,17 @@ async function loadPayments() {
 
         tableBody.innerHTML = payments.map(payment => `
             <tr>
-                <td><strong>#${payment.id}</strong></td>
-                <td><strong>#${payment.order_id}</strong></td>
-                <td><strong>GHS ${payment.amount.toFixed(2)}</strong></td>
-                <td>
+                <td data-label="ID"><strong>#${payment.id}</strong></td>
+                <td data-label="Order ID"><strong>#${payment.order_id}</strong></td>
+                <td data-label="Amount"><strong>${formatCurrency(payment.amount)}</strong></td>
+                <td data-label="Method">
                     <span class="payment-method">${payment.method}</span>
                 </td>
-                <td>
+                <td data-label="Status">
                     <span class="status-badge status-${payment.status}">${payment.status}</span>
                 </td>
-                <td>${new Date(payment.created_at).toLocaleDateString()}</td>
-                <td>
+                <td data-label="Date">${formatDateTime(payment.created_at)}</td>
+                <td data-label="Actions">
                     <div class="action-buttons">
                         <button class="btn btn-success btn-sm" onclick="updatePaymentStatus(${payment.id}, 'paid')" title="Mark as Paid">
                             <i class="fas fa-check"></i>
@@ -467,8 +679,14 @@ async function populateBundles() {
 
         console.log('Populating MTN bundles...');
         const response = await fetch(`${API_BASE_URL}/admin/populate-bundles`, {
-            method: 'POST'
+            method: 'POST',
+            headers: getAuthHeaders()
         });
+
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -502,6 +720,77 @@ function openAddBundleModal() {
 function closeAddBundleModal() {
     document.getElementById('addBundleModal').style.display = 'none';
     document.getElementById('addBundleForm').reset();
+}
+
+function closeEditBundleModal() {
+    const modal = document.getElementById('editBundleModal');
+    const form = document.getElementById('editBundleForm');
+    if (modal) modal.style.display = 'none';
+    if (form) form.reset();
+}
+
+function openEditBundleModalById(bundleId) {
+    const bundle = cachedBundles.find(item => item.id === bundleId);
+    if (!bundle) {
+        showError('Bundle not found for editing.');
+        return;
+    }
+
+    document.getElementById('editBundleId').value = bundle.id;
+    document.getElementById('editBundleName').value = bundle.name || '';
+    document.getElementById('editBundleSize').value = bundle.size || '';
+    document.getElementById('editBundlePrice').value = Number(bundle.price || 0).toFixed(2);
+    document.getElementById('editBundleNetwork').value = bundle.network || 'MTN';
+
+    document.getElementById('editBundleModal').style.display = 'block';
+}
+
+async function handleEditBundle(e) {
+    e.preventDefault();
+
+    const bundleId = parseInt(document.getElementById('editBundleId').value);
+    const payload = {
+        name: document.getElementById('editBundleName').value.trim(),
+        size: document.getElementById('editBundleSize').value.trim(),
+        price: parseFloat(document.getElementById('editBundlePrice').value),
+        network: document.getElementById('editBundleNetwork').value
+    };
+
+    if (!bundleId || !payload.name || !payload.size || !payload.network || Number.isNaN(payload.price)) {
+        showError('Please provide valid bundle details.');
+        return;
+    }
+
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+
+    try {
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitButton.disabled = true;
+
+        const response = await fetch(`${API_BASE_URL}/bundles/${bundleId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+
+        closeEditBundleModal();
+        showSuccess('Bundle updated successfully.');
+        await loadBundles();
+    } catch (error) {
+        console.error('Error updating bundle:', error);
+        showError('Failed to update bundle. Error: ' + error.message);
+    } finally {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    }
 }
 
 // Enhanced add bundle form submission
@@ -598,6 +887,7 @@ async function updateOrderStatus(orderId, status) {
         }
 
         loadOrders();
+        loadDashboard();
         showSuccess('Order status updated successfully!');
 
     } catch (error) {
@@ -691,9 +981,13 @@ function showNotification(message, type = 'info') {
 
 // Close modal when clicking outside
 window.addEventListener('click', function (event) {
-    const modal = document.getElementById('addBundleModal');
-    if (event.target === modal || event.target.classList.contains('modal-backdrop')) {
+    const addModal = document.getElementById('addBundleModal');
+    const editModal = document.getElementById('editBundleModal');
+    if (event.target === addModal || event.target.classList.contains('modal-backdrop')) {
         closeAddBundleModal();
+    }
+    if (event.target === editModal || event.target.classList.contains('modal-backdrop')) {
+        closeEditBundleModal();
     }
 });
 
@@ -719,6 +1013,7 @@ document.addEventListener('keydown', (e) => {
     // ESC key closes modals
     if (e.key === 'Escape') {
         closeAddBundleModal();
+        closeEditBundleModal();
     }
 
     // Ctrl/Cmd + K focuses search

@@ -62,9 +62,9 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_order)
     
-    # Send confirmation SMS
+    # Send confirmation SMS to the recipient phone
     message = "Your MTN data bundle from ExtraData will be delivered within 1–4 hours. Thank you for choosing ExtraData."
-    send_sms(order.phone_number, message)
+    send_sms(order.recipient_phone, message)
     
     return new_order
 

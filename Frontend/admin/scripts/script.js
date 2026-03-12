@@ -1,5 +1,7 @@
-// API Base URL - Use the same as your backend
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+// API Base URL - Auto-detect environment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://127.0.0.1:8000/api'           // Local development
+  : 'https://datashare-backend-2aiz.onrender.com/api';  // Production
 
 // Auth Token Key (must match auth.js)
 const TOKEN_KEY = 'extradata_admin_token';

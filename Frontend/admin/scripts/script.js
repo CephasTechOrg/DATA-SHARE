@@ -96,7 +96,10 @@ function getBundlePrice(order, bundleMap = null) {
 function checkAuth() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
-        window.location.href = 'login.html';
+        // Redirect to login with full path for GitHub Pages
+        const currentPath = window.location.pathname;
+        const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        window.location.href = basePath + '/login.html';
         return false;
     }
     return true;
@@ -115,7 +118,10 @@ function getAuthHeaders() {
 function handleUnauthorized() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    window.location.href = 'login.html';
+    // Redirect to login with full path for GitHub Pages
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    window.location.href = basePath + '/login.html';
 }
 
 // Logout function
@@ -124,7 +130,10 @@ function adminLogout() {
     localStorage.removeItem(USER_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
-    window.location.href = 'login.html';
+    // Redirect to login with full path for GitHub Pages
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    window.location.href = basePath + '/login.html';
 }
 
 // ==================== INITIALIZE ====================
@@ -489,7 +498,7 @@ async function loadDashboard() {
 
     } catch (error) {
         console.error('Error loading dashboard:', error);
-        showError('Failed to load dashboard data. Error: ' + error.message);
+        showError('Failed to load dashboard data. Please try again.');
     }
 }
 
@@ -639,7 +648,7 @@ async function loadBundles() {
 
     } catch (error) {
         console.error('Error loading bundles:', error);
-        showError('Failed to load bundles. Error: ' + error.message);
+        showError('Failed to load bundles. Please try again.');
     }
 }
 
@@ -723,7 +732,7 @@ async function loadOrders() {
 
     } catch (error) {
         console.error('Error loading orders:', error);
-        showError('Failed to load orders. Error: ' + error.message);
+        showError('Failed to load orders. Please try again.');
     }
 }
 
@@ -792,7 +801,7 @@ async function loadPayments() {
 
     } catch (error) {
         console.error('Error loading payments:', error);
-        showError('Failed to load payments. Error: ' + error.message);
+        showError('Failed to load payments. Please try again.');
     }
 }
 
@@ -836,7 +845,7 @@ async function populateBundles(buttonEl = null) {
 
     } catch (error) {
         console.error('Error populating bundles:', error);
-        showError('Failed to populate bundles. Error: ' + error.message);
+        showError('Failed to load bundle options. Please try again.');
     } finally {
         // Restore button state
         button.innerHTML = originalText;
@@ -918,7 +927,7 @@ async function handleEditBundle(e) {
         await loadBundles();
     } catch (error) {
         console.error('Error updating bundle:', error);
-        showError('Failed to update bundle. Error: ' + error.message);
+        showError('Failed to update bundle. Please try again.');
     } finally {
         submitButton.innerHTML = originalText;
         submitButton.disabled = false;
@@ -970,7 +979,7 @@ async function handleAddBundle(e) {
 
     } catch (error) {
         console.error('Error adding bundle:', error);
-        showError('Failed to add bundle. Error: ' + error.message);
+        showError('Failed to add bundle. Please try again.');
     } finally {
         // Restore button state in case of error
         const submitButton = e.target.querySelector('button[type="submit"]');
@@ -1002,7 +1011,7 @@ async function deleteBundle(bundleId) {
 
     } catch (error) {
         console.error('Error deleting bundle:', error);
-        showError('Failed to delete bundle. Error: ' + error.message);
+        showError('Failed to delete bundle. Please try again.');
     }
 }
 
@@ -1024,7 +1033,7 @@ async function updateOrderStatus(orderId, status) {
 
     } catch (error) {
         console.error('Error updating order status:', error);
-        showError('Failed to update order status. Error: ' + error.message);
+        showError('Failed to update order status. Please try again.');
     }
 }
 
@@ -1045,7 +1054,7 @@ async function updatePaymentStatus(paymentId, status) {
 
     } catch (error) {
         console.error('Error updating payment status:', error);
-        showError('Failed to update payment status. Error: ' + error.message);
+        showError('Failed to update payment status. Please try again.');
     }
 }
 
@@ -1074,7 +1083,7 @@ async function resetRevenueCounter() {
         loadDashboard();
     } catch (error) {
         console.error('Error resetting revenue counter:', error);
-        showError('Failed to reset revenue counter. Error: ' + error.message);
+        showError('Failed to reset revenue counter. Please try again.');
     }
 }
 
@@ -1108,7 +1117,7 @@ async function clearHistory() {
         loadPayments();
     } catch (error) {
         console.error('Error clearing history:', error);
-        showError('Failed to clear history. Error: ' + error.message);
+        showError('Failed to clear history. Please try again.');
     }
 }
 

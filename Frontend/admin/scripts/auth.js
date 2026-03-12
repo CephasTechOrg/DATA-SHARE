@@ -62,14 +62,18 @@ function clearAuthData() {
  * Redirect to login page
  */
 function redirectToLogin() {
-    window.location.href = 'login.html';
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    window.location.href = basePath + '/login.html';
 }
 
 /**
  * Redirect to dashboard
  */
 function redirectToDashboard() {
-    window.location.href = 'index.html';
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    window.location.href = basePath + '/index.html';
 }
 
 /**

@@ -1,4 +1,11 @@
 services:
+  - type: pserv
+    name: datashare-db
+    env: postgres
+    plan: free
+    region: oregon
+    ipAllowList: []
+
   - type: web
     name: datashare-backend
     env: python

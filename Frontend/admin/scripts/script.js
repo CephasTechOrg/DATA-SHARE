@@ -50,6 +50,11 @@ function formatDateTime(dateValue) {
     return new Date(dateValue).toLocaleString();
 }
 
+function formatResetDate(dateValue) {
+    if (!dateValue) return 'All-time paid revenue';
+    return `Since ${new Date(dateValue).toLocaleString()}`;
+}
+
 function getOrderAmount(order) {
     return Number(order?.bundle?.price || 0);
 }
@@ -60,6 +65,27 @@ function getOrderRecipient(order) {
 
 function getOrderPayer(order) {
     return order?.payer_phone || order?.phone_number || 'N/A';
+}
+
+function getBundleLabel(order, bundleMap = null) {
+    const fromOrder = order?.bundle;
+    if (fromOrder?.name) {
+        return `${fromOrder.name}${fromOrder.size ? ` (${fromOrder.size})` : ''}`;
+    }
+
+    const fromMap = bundleMap ? bundleMap.get(order?.bundle_id) : null;
+    if (fromMap?.name) {
+        return `${fromMap.name}${fromMap.size ? ` (${fromMap.size})` : ''}`;
+    }
+
+    return 'N/A';
+}
+
+function getBundlePrice(order, bundleMap = null) {
+    if (order?.bundle?.price != null) return Number(order.bundle.price);
+    const fromMap = bundleMap ? bundleMap.get(order?.bundle_id) : null;
+    if (fromMap?.price != null) return Number(fromMap.price);
+    return 0;
 }
 
 // ==================== AUTH CHECK ====================
@@ -229,16 +255,6 @@ function debounce(func, wait) {
 // Handle search
 function handleSearch(e) {
     const searchTerm = e.target.value.toLowerCase();
-    if (currentTab === 'orders') {
-        const activeRows = document.querySelectorAll('#ordersTable tr');
-        const completedRows = document.querySelectorAll('#completedOrdersTable tr');
-        [...activeRows, ...completedRows].forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-        return;
-    }
-
     const currentTable = document.querySelector(`#${currentTab}Table`);
     if (currentTable) {
         const rows = currentTable.getElementsByTagName('tr');
@@ -253,27 +269,9 @@ function handleSearch(e) {
 function handleFilter(e) {
     if (currentTab === 'orders' && e.target.id === 'statusFilter') {
         const value = e.target.value;
-        const queuePanel = document.querySelector('.orders-panel:first-child');
-        const historyPanel = document.querySelector('.orders-panel:last-child');
-
-        if (!queuePanel || !historyPanel) {
-            return;
-        }
-
-        queuePanel.style.display = (value === 'history') ? 'none' : 'block';
-        historyPanel.style.display = (value === 'queue') ? 'none' : 'block';
-
-        const rowMatcher = (row) => {
-            const rowText = row.textContent.toLowerCase();
-            if (!value || value === 'queue' || value === 'history') return true;
-            return rowText.includes(value.toLowerCase());
-        };
-
         document.querySelectorAll('#ordersTable tr').forEach(row => {
-            row.style.display = rowMatcher(row) ? '' : 'none';
-        });
-        document.querySelectorAll('#completedOrdersTable tr').forEach(row => {
-            row.style.display = rowMatcher(row) ? '' : 'none';
+            const rowText = row.textContent.toLowerCase();
+            row.style.display = !value || rowText.includes(value.toLowerCase()) ? '' : 'none';
         });
         return;
     }
@@ -355,17 +353,25 @@ async function loadHistory() {
             </tr>
         `;
 
-        const [ordersResponse, paymentsResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/orders/`),
-            fetch(`${API_BASE_URL}/payments/`)
+        const [ordersResponse, paymentsResponse, bundlesResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/admin/orders`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/admin/payments`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/bundles/`)
         ]);
 
-        if (!ordersResponse.ok || !paymentsResponse.ok) {
+        if (ordersResponse.status === 401 || paymentsResponse.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+
+        if (!ordersResponse.ok || !paymentsResponse.ok || !bundlesResponse.ok) {
             throw new Error('Failed to load history data');
         }
 
         const orders = await ordersResponse.json();
         const payments = await paymentsResponse.json();
+        const bundles = await bundlesResponse.json();
+        const bundleMap = new Map((bundles || []).map(bundle => [bundle.id, bundle]));
 
         const latestPaidPaymentByOrder = new Map();
         payments
@@ -385,10 +391,8 @@ async function loadHistory() {
                 return {
                     reference: order.payment_reference || (paidPayment ? `PAY-${paidPayment.id}` : `ORDER-${order.id}`),
                     customer_name: order.customer_name || 'N/A',
-                    bundle_text: order.bundle
-                        ? `${order.bundle.name}${order.bundle.size ? ` (${order.bundle.size})` : ''}`
-                        : 'N/A',
-                    amount: paidPayment?.amount ?? getOrderAmount(order),
+                    bundle_text: getBundleLabel(order, bundleMap),
+                    amount: paidPayment?.amount ?? getBundlePrice(order, bundleMap),
                     status: paidPayment?.status || order.status || 'completed',
                     created_at: itemDate
                 };
@@ -433,28 +437,31 @@ async function loadHistory() {
 async function loadDashboard() {
     try {
         console.log('Loading dashboard data...');
-        const [dashboardResponse, ordersResponse, paymentsResponse] = await Promise.all([
+        const [dashboardResponse, ordersResponse, paymentsResponse, bundlesResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/admin/dashboard`, { headers: getAuthHeaders() }),
-            fetch(`${API_BASE_URL}/orders/`),
-            fetch(`${API_BASE_URL}/payments/`)
+            fetch(`${API_BASE_URL}/admin/orders`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/admin/payments`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/bundles/`)
         ]);
 
-        if (dashboardResponse.status === 401) {
+        if (dashboardResponse.status === 401 || ordersResponse.status === 401 || paymentsResponse.status === 401) {
             handleUnauthorized();
             return;
         }
 
-        if (!dashboardResponse.ok || !ordersResponse.ok || !paymentsResponse.ok) {
+        if (!dashboardResponse.ok || !ordersResponse.ok || !paymentsResponse.ok || !bundlesResponse.ok) {
             throw new Error('Failed to load dashboard aggregates');
         }
 
         const dashboardData = await dashboardResponse.json();
         const orders = await ordersResponse.json();
         const payments = await paymentsResponse.json();
+        const bundles = await bundlesResponse.json();
+        const bundleMap = new Map((bundles || []).map(bundle => [bundle.id, bundle]));
 
         const completedOrders = orders.filter(order => order.status === 'completed');
         const pendingOrders = orders.filter(order => order.status === 'pending' || order.status === 'processing');
-        const revenue = completedOrders.reduce((sum, order) => sum + getOrderAmount(order), 0);
+        const revenue = Number(dashboardData.revenue_since_reset ?? 0);
         const uniqueCustomers = new Set(
             orders
                 .map(order => `${order.customer_name || ''}-${getOrderRecipient(order)}`)
@@ -470,6 +477,10 @@ async function loadDashboard() {
         // Quick stats
         document.getElementById('totalRevenue').textContent = revenue.toFixed(2);
         document.getElementById('totalCustomers').textContent = uniqueCustomers;
+        const revenueResetLabel = document.getElementById('revenueResetLabel');
+        if (revenueResetLabel) {
+            revenueResetLabel.textContent = formatResetDate(dashboardData.revenue_reset_at);
+        }
 
         // Load recent orders
         await loadRecentOrders();
@@ -500,13 +511,23 @@ function animateCounter(elementId, target) {
 // Enhanced recent orders loading
 async function loadRecentOrders() {
     try {
-        const response = await fetch(`${API_BASE_URL}/orders/`);
+        const [ordersResponse, bundlesResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/admin/orders`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/bundles/`)
+        ]);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (ordersResponse.status === 401) {
+            handleUnauthorized();
+            return;
         }
 
-        const orders = await response.json();
+        if (!ordersResponse.ok || !bundlesResponse.ok) {
+            throw new Error('Failed to load recent orders');
+        }
+
+        const orders = await ordersResponse.json();
+        const bundles = await bundlesResponse.json();
+        const bundleMap = new Map((bundles || []).map(bundle => [bundle.id, bundle]));
         console.log('Recent orders:', orders);
 
         const recentOrders = orders.slice(-5).reverse();
@@ -528,7 +549,7 @@ async function loadRecentOrders() {
             <div class="activity-item">
                 <div class="activity-info">
                     <h4>${order.customer_name}</h4>
-                    <p>${order.bundle ? order.bundle.name : 'N/A'} • ${getOrderRecipient(order)}</p>
+                    <p>${getBundleLabel(order, bundleMap)} • ${getOrderRecipient(order)}</p>
                 </div>
                 <div class="activity-status">
                     <span class="status-badge status-${order.status}">${order.status}</span>
@@ -624,22 +645,31 @@ async function loadBundles() {
 async function loadOrders() {
     try {
         console.log('Loading orders...');
-        const response = await fetch(`${API_BASE_URL}/orders/`);
+        const [ordersResponse, bundlesResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/admin/orders`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/bundles/`)
+        ]);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (ordersResponse.status === 401) {
+            handleUnauthorized();
+            return;
         }
 
-        const orders = await response.json();
+        if (!ordersResponse.ok || !bundlesResponse.ok) {
+            throw new Error('Failed to load orders data');
+        }
+
+        const orders = await ordersResponse.json();
+        const bundles = await bundlesResponse.json();
+        const bundleMap = new Map((bundles || []).map(bundle => [bundle.id, bundle]));
         console.log('Orders loaded:', orders);
 
-        const activeTableBody = document.getElementById('ordersTable');
-        const completedTableBody = document.getElementById('completedOrdersTable');
+        const tableBody = document.getElementById('ordersTable');
 
         if (!orders || orders.length === 0) {
-            activeTableBody.innerHTML = `
+            tableBody.innerHTML = `
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 3rem;">
+                    <td colspan="8" style="text-align: center; padding: 3rem;">
                         <div style="text-align: center; color: var(--text-light);">
                             <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
                             <h3 style="margin-bottom: 0.5rem;">No orders found</h3>
@@ -648,26 +678,14 @@ async function loadOrders() {
                     </td>
                 </tr>
             `;
-            completedTableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-light);">
-                        No completed orders yet.
-                    </td>
-                </tr>
-            `;
-            document.getElementById('activeOrderCount').textContent = '0';
-            document.getElementById('completedOrderCount').textContent = '0';
             return;
         }
 
-        const sortedOrders = [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        const activeOrders = sortedOrders.filter(order => order.status !== 'completed');
-        const completedOrders = sortedOrders.filter(order => order.status === 'completed');
+        const sortedOrders = [...orders]
+            .filter(order => order.status !== 'completed')
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-        document.getElementById('activeOrderCount').textContent = `${activeOrders.length}`;
-        document.getElementById('completedOrderCount').textContent = `${completedOrders.length}`;
-
-        activeTableBody.innerHTML = activeOrders.length ? activeOrders.map(order => `
+        tableBody.innerHTML = sortedOrders.length ? sortedOrders.map(order => `
             <tr>
                 <td data-label="ID"><strong>#${order.id}</strong></td>
                 <td data-label="Customer">
@@ -676,9 +694,8 @@ async function loadOrders() {
                     </div>
                 </td>
                 <td data-label="Send To">${getOrderRecipient(order)}</td>
-                <td data-label="Paying No.">${getOrderPayer(order)}</td>
-                <td data-label="Bundle">${order.bundle ? `${order.bundle.name} (${order.bundle.size || ''})` : 'N/A'}</td>
-                <td data-label="Amount"><strong>${formatCurrency(getOrderAmount(order))}</strong></td>
+                <td data-label="Bundle">${getBundleLabel(order, bundleMap)}</td>
+                <td data-label="Amount"><strong>${formatCurrency(getBundlePrice(order, bundleMap))}</strong></td>
                 <td data-label="Status">
                     <span class="status-badge status-${order.status}">${order.status}</span>
                 </td>
@@ -696,33 +713,8 @@ async function loadOrders() {
             </tr>
         `).join('') : `
             <tr>
-                <td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-light);">
-                    No active orders in queue.
-                </td>
-            </tr>
-        `;
-
-        completedTableBody.innerHTML = completedOrders.length ? completedOrders.map(order => `
-            <tr>
-                <td data-label="ID"><strong>#${order.id}</strong></td>
-                <td data-label="Customer">${order.customer_name}</td>
-                <td data-label="Send To">${getOrderRecipient(order)}</td>
-                <td data-label="Bundle">${order.bundle ? `${order.bundle.name} (${order.bundle.size || ''})` : 'N/A'}</td>
-                <td data-label="Amount"><strong>${formatCurrency(getOrderAmount(order))}</strong></td>
-                <td data-label="Status"><span class="status-badge status-completed">completed</span></td>
-                <td data-label="Completed On">${formatDateTime(order.created_at)}</td>
-                <td data-label="Actions">
-                    <div class="action-buttons">
-                        <button class="btn btn-outline btn-sm" onclick="updateOrderStatus(${order.id}, 'pending')" title="Move back to queue">
-                            <i class="fas fa-undo"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('') : `
-            <tr>
                 <td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-light);">
-                    No completed orders yet.
+                    No active orders in queue.
                 </td>
             </tr>
         `;
@@ -737,13 +729,23 @@ async function loadOrders() {
 async function loadPayments() {
     try {
         console.log('Loading payments...');
-        const response = await fetch(`${API_BASE_URL}/payments/`);
+        const [paymentsResponse, ordersResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/admin/payments`, { headers: getAuthHeaders() }),
+            fetch(`${API_BASE_URL}/admin/orders`, { headers: getAuthHeaders() })
+        ]);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (paymentsResponse.status === 401 || ordersResponse.status === 401) {
+            handleUnauthorized();
+            return;
         }
 
-        const payments = await response.json();
+        if (!paymentsResponse.ok || !ordersResponse.ok) {
+            throw new Error('Failed to load payments data');
+        }
+
+        const payments = await paymentsResponse.json();
+        const orders = await ordersResponse.json();
+        const orderMap = new Map((orders || []).map(order => [order.id, order]));
         console.log('Payments loaded:', payments);
 
         const tableBody = document.getElementById('paymentsTable');
@@ -751,7 +753,7 @@ async function loadPayments() {
         if (!payments || payments.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 3rem;">
+                    <td colspan="8" style="text-align: center; padding: 3rem;">
                         <div style="text-align: center; color: var(--text-light);">
                             <i class="fas fa-credit-card" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
                             <h3 style="margin-bottom: 0.5rem;">No payments found</h3>
@@ -767,6 +769,7 @@ async function loadPayments() {
             <tr>
                 <td data-label="ID"><strong>#${payment.id}</strong></td>
                 <td data-label="Order ID"><strong>#${payment.order_id}</strong></td>
+                <td data-label="Payment Number">${getOrderPayer(orderMap.get(payment.order_id))}</td>
                 <td data-label="Amount"><strong>${formatCurrency(payment.amount)}</strong></td>
                 <td data-label="Method">
                     <span class="payment-method">${payment.method}</span>
@@ -792,9 +795,12 @@ async function loadPayments() {
 }
 
 // Enhanced populate bundles
-async function populateBundles() {
+async function populateBundles(buttonEl = null) {
     try {
-        const button = event.target;
+        const button = buttonEl || event?.target?.closest('button');
+        if (!button) {
+            throw new Error('Populate button not found');
+        }
         const originalText = button.innerHTML;
 
         // Show loading state
@@ -1038,6 +1044,69 @@ async function updatePaymentStatus(paymentId, status) {
     } catch (error) {
         console.error('Error updating payment status:', error);
         showError('Failed to update payment status. Error: ' + error.message);
+    }
+}
+
+async function resetRevenueCounter() {
+    if (!confirm('Reset revenue counter now? Old records remain, but dashboard revenue will start fresh from this moment.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/revenue/reset`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+
+        showSuccess('Revenue counter reset successfully.');
+        loadDashboard();
+    } catch (error) {
+        console.error('Error resetting revenue counter:', error);
+        showError('Failed to reset revenue counter. Error: ' + error.message);
+    }
+}
+
+async function clearHistory() {
+    if (!confirm('This will permanently delete paid payment history and linked orders. Continue?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/history/clear`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        showSuccess(`History cleared. Deleted ${result.deleted_payments || 0} payments and ${result.deleted_orders || 0} orders.`);
+
+        await loadHistory();
+        loadDashboard();
+        loadOrders();
+        loadPayments();
+    } catch (error) {
+        console.error('Error clearing history:', error);
+        showError('Failed to clear history. Error: ' + error.message);
     }
 }
 

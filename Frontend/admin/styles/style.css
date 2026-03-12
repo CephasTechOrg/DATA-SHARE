@@ -170,18 +170,20 @@ body {
     z-index: 1000;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
     box-shadow: var(--shadow-xl);
 }
 
 .sidebar-header {
-    padding: 2rem 1.5rem 1.5rem;
+    padding: 1.1rem 1.25rem 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .admin-logo {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0;
 }
 
 .logo-icon {
@@ -198,9 +200,9 @@ body {
 }
 
 .logo-text h2 {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 800;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
     background: linear-gradient(135deg, #fff, #a5b4fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -208,7 +210,7 @@ body {
 }
 
 .logo-text p {
-    font-size: 0.9rem;
+    font-size: 0.78rem;
     opacity: 0.7;
     font-weight: 500;
 }
@@ -224,7 +226,7 @@ body {
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0;
     padding: 1rem 1.5rem;
     text-decoration: none;
     color: rgba(255, 255, 255, 0.7);
@@ -236,7 +238,7 @@ body {
 .nav-item:hover {
     background: rgba(255, 255, 255, 0.05);
     color: white;
-    padding-left: 2rem;
+    padding-left: 1.5rem;
 }
 
 .nav-item.active {
@@ -265,6 +267,7 @@ body {
 
 .nav-text {
     font-weight: 500;
+    width: 100%;
     transition: var(--transition);
 }
 
@@ -281,6 +284,7 @@ body {
 }
 
 .sidebar-footer {
+    margin-top: auto;
     padding: 1.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -288,7 +292,7 @@ body {
 .admin-profile {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .profile-avatar {
@@ -306,12 +310,20 @@ body {
 
 .profile-info {
     flex: 1;
+    min-width: 0;
 }
 
 .profile-name {
     display: block;
     font-weight: 600;
     margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.logout-btn {
+    flex-shrink: 0;
 }
 
 .profile-role {
@@ -765,7 +777,8 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .orders-grid {
@@ -880,6 +893,7 @@ body {
 
 .data-table {
     width: 100%;
+    min-width: 980px;
     border-collapse: collapse;
 }
 
@@ -1314,6 +1328,10 @@ body {
         width: 100%;
     }
 
+    .data-table {
+        min-width: 0;
+    }
+
     .data-table thead {
         display: none;
     }
@@ -1410,6 +1428,14 @@ body {
     justify-content: flex-end;
     gap: 0.5rem;
     flex-wrap: wrap;
+}
+
+.sidebar-footer {
+    display: none;
+}
+
+.logout-header-btn {
+    margin-left: auto;
 }
 
 .tab-content {
@@ -1536,6 +1562,10 @@ body {
         grid-template-columns: 2fr 1fr;
         gap: 1.5rem;
     }
+
+    .sidebar-footer {
+        display: block;
+    }
 }
 
 /* Utility Classes */
@@ -1591,6 +1621,7 @@ body {
 }
 
 .logout-header-btn {
+    display: none;
     border-color: var(--danger) !important;
     color: var(--danger) !important;
 }
@@ -1598,6 +1629,13 @@ body {
 .logout-header-btn:hover {
     background: var(--danger) !important;
     color: white !important;
+}
+
+@media (max-width: 1024px) {
+    .logout-header-btn {
+        display: inline-flex;
+        margin-left: auto;
+    }
 }
 
 /* Scrollbar Styling */

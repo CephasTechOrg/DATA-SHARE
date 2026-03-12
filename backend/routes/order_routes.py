@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from utils.db import get_db
 from models.order_model import Order
+from models.payment_model import Payment
 from models.bundle_model import Bundle
 from schemas.order_schema import OrderCreate, OrderResponse
 from typing import List
@@ -73,6 +74,18 @@ def update_order_status(order_id: int, status: str, db: Session = Depends(get_db
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    requires_paid_payment = status in {"paid", "processing", "completed"}
+    if requires_paid_payment:
+        paid_payment = db.query(Payment).filter(
+            Payment.order_id == order_id,
+            Payment.status == "paid"
+        ).first()
+        if not paid_payment:
+            raise HTTPException(
+                status_code=400,
+                detail="Order status can only be updated after payment is completed"
+            )
     
     order.status = status
     db.commit()

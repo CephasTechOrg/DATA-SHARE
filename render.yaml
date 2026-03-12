@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: datashare-backend
+    env: python
+    region: oregon
+    plan: free
+    branch: main # watches the main branch — auto-deploys on every push to main
+    rootDir: backend # Render runs all commands from inside the /backend folder
+
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    startCommand: |
+      uvicorn main:app --host 0.0.0.0 --port $PORT
+
+    healthCheckPath: /health # Render pings this endpoint to confirm the service is up
+
+    envVars:
+      # ── Python runtime ────────────────────────────────────────────────────────
+      - key: PYTHON_VERSION
+        value: "3.11.9" # must be major.minor.patch format for Render
+      - key: PIP_ROOT_USER_ACTION
+        value: ignore # suppress pip warnings about running as root
+
+      # ── Application environment ───────────────────────────────────────────────
+      - key: ENV
+        value: production # controls CORS, security, logging behaviour
+
+      # ── Secrets (set manually once in Render dashboard, NEVER hardcoded here) ─
+      - key: DATABASE_URL
+        sync: false # PostgreSQL connection string (postgresql+psycopg2://...)
+
+      - key: PAYSTACK_SECRET_KEY
+        sync: false # Paystack secret key for payment processing
+
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false # Paystack public key for frontend
+
+      - key: JWT_SECRET_KEY
+        sync: false # JWT signing key — set once, NEVER change
+
+      - key: ADMIN_USERNAME
+        sync: false # Admin portal username
+
+      - key: ADMIN_PASSWORD
+        sync: false # Admin portal password
+
+      - key: SMS_API_KEY
+        sync: false # Africa's Talking SMS API key (optional)
+
+      - key: SMS_API_URL
+        sync: false # Africa's Talking API URL (optional)
+
+      - key: SENDER_ID
+        sync: false # SMS sender ID (optional)

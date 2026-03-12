@@ -304,17 +304,20 @@ function displayBundles(bundles) {
     }
 
     bundlesGrid.innerHTML = bundles.map(bundle => `
-        <div class="bundle-card">
-            <div class="bundle-size">${bundle.size}</div>
-            <div class="bundle-name">${bundle.name}</div>
-            <div class="bundle-price">${bundle.price.toFixed(2)}</div>
-            <div class="bundle-non-expiry">
-                <i class="fas fa-infinity"></i>
-                Non-Expiry
+        <div class="bundle-card" onclick="openOrderModal(${bundle.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openOrderModal(${bundle.id});}" role="button" tabindex="0" aria-label="Buy ${bundle.name}">
+            <div class="bundle-card-top">
+                <div class="bundle-network-pill">MTN</div>
+                <div class="bundle-more-icon">
+                    <i class="fas fa-angle-down"></i>
+                </div>
             </div>
-            <button class="buy-btn" onclick="openOrderModal(${bundle.id})">
-                <i class="fas fa-shopping-cart"></i> Buy Now
-            </button>
+            <div class="bundle-size">${bundle.size}</div>
+            <div class="bundle-name">${bundle.network || 'MTN'} Bundle</div>
+            <div class="bundle-card-bottom">
+                <div class="bundle-price">₵${bundle.price.toFixed(2)}</div>
+                <div class="bundle-non-expiry">No Expiry</div>
+            </div>
+            <div class="bundle-card-strip"></div>
         </div>
     `).join('');
 }
@@ -344,11 +347,7 @@ async function openOrderModal(bundleId) {
         `;
 
         hideModalLoading('orderModal');
-        document.getElementById('orderModal').style.display = 'block';
-
-        // Add entrance animation
-        const modal = document.getElementById('orderModal');
-        modal.style.animation = 'modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+        openModalById('orderModal');
     } catch (error) {
         hideModalLoading('orderModal');
         showCleanError('Loading bundle details failed', error, 'Could not load bundle details. Please try again.');
@@ -374,14 +373,42 @@ function hideModalLoading(modalId) {
     }
 }
 
+function openModalById(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.style.display = 'block';
+
+    const backdrop = modal.querySelector('.modal-backdrop');
+    const content = modal.querySelector('.modal-content');
+
+    if (backdrop) {
+        backdrop.style.animation = 'none';
+        void backdrop.offsetHeight;
+        backdrop.style.animation = 'fadeIn 0.24s ease-out';
+    }
+
+    if (content) {
+        content.style.animation = 'none';
+        void content.offsetHeight;
+        content.style.animation = 'modalSlideIn 0.24s cubic-bezier(0.4, 0, 0.2, 1)';
+    }
+}
+
+function closeModalById(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.style.display = 'none';
+}
+
 // Show processing modal
 function showProcessingModal() {
-    document.getElementById('processingModal').style.display = 'block';
+    openModalById('processingModal');
 }
 
 // Hide processing modal
 function hideProcessingModal() {
-    document.getElementById('processingModal').style.display = 'none';
+    closeModalById('processingModal');
 }
 
 // Enhanced order form submission with Paystack integration
@@ -426,7 +453,7 @@ async function handleOrderSubmit(e) {
 
     try {
         showModalLoading('orderModal');
-        document.getElementById('orderModal').style.display = 'none';
+        closeModalById('orderModal');
         showProcessingModal();
 
         console.log('Initializing payment:', paymentData);
@@ -470,7 +497,7 @@ async function handleOrderSubmit(e) {
     } catch (error) {
         hideProcessingModal();
         hideModalLoading('orderModal');
-        document.getElementById('orderModal').style.display = 'block';
+        openModalById('orderModal');
         showCleanError('Payment initialization failed', error, 'Unable to start payment. Please try again.');
     }
 }
@@ -492,12 +519,12 @@ function openPaystackPopup(paystackData) {
             console.log('Payment cancelled');
             showError('Payment was cancelled. Please try again.');
             // Show order modal again so they can retry
-            document.getElementById('orderModal').style.display = 'block';
+            openModalById('orderModal');
         },
         onError: function(error) {
             console.error('Paystack error:', error);
             showError('Payment failed. Please try again.');
-            document.getElementById('orderModal').style.display = 'block';
+            openModalById('orderModal');
         }
     });
 }
@@ -545,11 +572,7 @@ function showSuccessModal(paymentResult) {
         `;
     }
     
-    document.getElementById('successModal').style.display = 'block';
-    
-    // Add entrance animation
-    const modal = document.getElementById('successModal');
-    modal.style.animation = 'modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+    openModalById('successModal');
     
     // Reset form
     document.getElementById('orderForm').reset();
@@ -568,7 +591,7 @@ function showSuccessModal(paymentResult) {
 // Enhanced close modals
 function closeModals() {
     document.querySelectorAll('.modal').forEach(modal => {
-        modal.style.display = 'none';
+        closeModalById(modal.id);
     });
 }
 
@@ -635,7 +658,7 @@ function showError(message) {
 window.addEventListener('click', function (event) {
     document.querySelectorAll('.modal').forEach(modal => {
         if (event.target === modal || event.target.classList.contains('modal-backdrop')) {
-            modal.style.display = 'none';
+            closeModalById(modal.id);
         }
     });
 });

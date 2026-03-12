@@ -12,7 +12,7 @@ services:
     region: oregon
     plan: free
     branch: main # watches the main branch — auto-deploys on every push to main
-    rootDir: backend # Render runs all commands from inside the /backend folder
+    rootDir: backend # Deploy backend only
 
     buildCommand: |
       pip install --upgrade pip

@@ -60,22 +60,3 @@ def test_db():
     except Exception as e:
         logger.error(f"Database connection error: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    
-
-    # ------------------ Frontend Section ------------------
-
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import os
-
-# Serve customer and admin frontend
-app.mount("/static/customer", StaticFiles(directory="../frontend/customer"), name="customer_static")
-app.mount("/static/admin", StaticFiles(directory="../frontend/admin"), name="admin_static")
-
-@app.get("/customer")
-async def read_customer_index():
-    return FileResponse('../frontend/customer/index.html')
-
-@app.get("/admin")
-async def read_admin_index():
-    return FileResponse('../frontend/admin/index.html')

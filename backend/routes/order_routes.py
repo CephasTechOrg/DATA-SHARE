@@ -7,8 +7,9 @@ from models.bundle_model import Bundle
 from schemas.order_schema import OrderCreate, OrderResponse
 from typing import List
 import requests
+import logging
 
-router = APIRouter(prefix="/orders", tags=["Orders"])
+logger = logging.getLogger(__name__)
 
 def send_sms(phone_number, message):
     """
@@ -36,8 +37,8 @@ def send_sms(phone_number, message):
     return response.json()
     """
     
-    # For now, just print the message
-    print(f"SMS to {phone_number}: {message}")
+    # For now, log the message (SMS integration pending)
+    logger.info(f"SMS to {phone_number}: {message}")
     return {"status": "sent", "message": "SMS would be sent in production"}
 
 @router.get("/", response_model=List[OrderResponse])

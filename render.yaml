@@ -31,6 +31,10 @@ services:
       - key: DATABASE_URL
         sync: false # PostgreSQL connection string (postgresql+psycopg2://...)
 
+      # ── Frontend URL (for payment callbacks) ────────────────────────────────
+      - key: FRONTEND_URL
+        sync: false # Set to your frontend URL (e.g., https://your-domain.com)
+
       # ── Secrets (set manually once in Render dashboard, NEVER hardcoded here) ─
 
       - key: PAYSTACK_SECRET_KEY

@@ -5,6 +5,7 @@ from typing import List, Optional
 import requests
 import uuid
 import logging
+import os
 
 from utils.db import get_db
 from utils.config import PAYSTACK_SECRET_KEY
@@ -86,7 +87,7 @@ def initialize_payment(request: InitializePaymentRequest, db: Session = Depends(
             "email": new_order.email,
             "amount": amount_in_pesewas,
             "reference": payment_reference,
-            "callback_url": request.callback_url or "http://127.0.0.1:8000/customer/payment-success.html",
+            "callback_url": request.callback_url or os.getenv("FRONTEND_URL", "http://127.0.0.1:3000/customer/payment-success.html"),
             "metadata": {
                 "order_id": new_order.id,
                 "bundle_name": bundle.name,

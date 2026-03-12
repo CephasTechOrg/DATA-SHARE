@@ -13,6 +13,38 @@ function formatCurrency(amount) {
     return `GHS ${Number(amount || 0).toFixed(2)}`;
 }
 
+function parseBundleSizeToMB(sizeValue) {
+    if (!sizeValue) return Number.MAX_SAFE_INTEGER;
+    const raw = String(sizeValue).trim().toUpperCase();
+    const matched = raw.match(/(\d+(?:\.\d+)?)\s*(MB|GB|TB)/i);
+    if (!matched) return Number.MAX_SAFE_INTEGER;
+
+    const numeric = parseFloat(matched[1]);
+    const unit = matched[2].toUpperCase();
+
+    if (Number.isNaN(numeric)) return Number.MAX_SAFE_INTEGER;
+    if (unit === 'MB') return numeric;
+    if (unit === 'GB') return numeric * 1024;
+    if (unit === 'TB') return numeric * 1024 * 1024;
+    return Number.MAX_SAFE_INTEGER;
+}
+
+function sortBundlesBySizeAsc(bundles) {
+    return [...(bundles || [])].sort((a, b) => {
+        const sizeA = parseBundleSizeToMB(a.size);
+        const sizeB = parseBundleSizeToMB(b.size);
+
+        if (sizeA !== sizeB) return sizeA - sizeB;
+
+        const nameA = String(a.name || '');
+        const nameB = String(b.name || '');
+        const byName = nameA.localeCompare(nameB);
+        if (byName !== 0) return byName;
+
+        return Number(a.id || 0) - Number(b.id || 0);
+    });
+}
+
 function formatDateTime(dateValue) {
     if (!dateValue) return 'N/A';
     return new Date(dateValue).toLocaleString();
@@ -309,18 +341,92 @@ function switchTab(tabName) {
     }
 }
 
-// Step 1 placeholder: History tab loader (full implementation in Step 2)
-function loadHistory() {
+// History tab loader
+async function loadHistory() {
     const tableBody = document.getElementById('historyTable');
     if (!tableBody) return;
 
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-light);">
-                History view is ready. Data rendering will be added in Step 2.
-            </td>
-        </tr>
-    `;
+    try {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-light);">
+                    Loading history...
+                </td>
+            </tr>
+        `;
+
+        const [ordersResponse, paymentsResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/orders/`),
+            fetch(`${API_BASE_URL}/payments/`)
+        ]);
+
+        if (!ordersResponse.ok || !paymentsResponse.ok) {
+            throw new Error('Failed to load history data');
+        }
+
+        const orders = await ordersResponse.json();
+        const payments = await paymentsResponse.json();
+
+        const latestPaidPaymentByOrder = new Map();
+        payments
+            .filter(payment => payment.status === 'paid')
+            .forEach(payment => {
+                const existing = latestPaidPaymentByOrder.get(payment.order_id);
+                if (!existing || new Date(payment.created_at) > new Date(existing.created_at)) {
+                    latestPaidPaymentByOrder.set(payment.order_id, payment);
+                }
+            });
+
+        const historyItems = (orders || [])
+            .filter(order => order.status === 'completed' || latestPaidPaymentByOrder.has(order.id))
+            .map(order => {
+                const paidPayment = latestPaidPaymentByOrder.get(order.id);
+                const itemDate = paidPayment?.created_at || order.created_at;
+                return {
+                    reference: order.payment_reference || (paidPayment ? `PAY-${paidPayment.id}` : `ORDER-${order.id}`),
+                    customer_name: order.customer_name || 'N/A',
+                    bundle_text: order.bundle
+                        ? `${order.bundle.name}${order.bundle.size ? ` (${order.bundle.size})` : ''}`
+                        : 'N/A',
+                    amount: paidPayment?.amount ?? getOrderAmount(order),
+                    status: paidPayment?.status || order.status || 'completed',
+                    created_at: itemDate
+                };
+            })
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        if (!historyItems.length) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-light);">
+                        No history yet. Completed or paid transactions will appear here.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = historyItems.map(item => `
+            <tr>
+                <td data-label="Reference"><strong>${item.reference}</strong></td>
+                <td data-label="Customer">${item.customer_name}</td>
+                <td data-label="Bundle">${item.bundle_text}</td>
+                <td data-label="Amount"><strong>${formatCurrency(item.amount)}</strong></td>
+                <td data-label="Status"><span class="status-badge status-${item.status}">${item.status}</span></td>
+                <td data-label="Date">${formatDateTime(item.created_at)}</td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Error loading history:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: #dc2626;">
+                    Failed to load history. Please try again.
+                </td>
+            </tr>
+        `;
+    }
 }
 
 // Enhanced dashboard loading with animations
@@ -454,12 +560,13 @@ async function loadBundles() {
         }
 
         const bundles = await response.json();
-        console.log('Bundles loaded:', bundles);
-        cachedBundles = bundles;
+        const sortedBundles = sortBundlesBySizeAsc(bundles);
+        console.log('Bundles loaded (sorted by size):', sortedBundles);
+        cachedBundles = sortedBundles;
 
         const tableBody = document.getElementById('bundlesTable');
 
-        if (!bundles || bundles.length === 0) {
+        if (!sortedBundles || sortedBundles.length === 0) {
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="7" style="text-align: center; padding: 3rem;">
@@ -477,7 +584,7 @@ async function loadBundles() {
             return;
         }
 
-        tableBody.innerHTML = bundles.map(bundle => `
+        tableBody.innerHTML = sortedBundles.map(bundle => `
             <tr>
                 <td data-label="ID"><strong>#${bundle.id}</strong></td>
                 <td data-label="Name">

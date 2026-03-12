@@ -8,6 +8,38 @@ const PAYSTACK_PUBLIC_KEY = 'pk_test_9102d844d7cc5268089a531de060bb366c593d3b';
 let currentOrder = null;
 let selectedBundle = null;
 
+function parseBundleSizeToMB(sizeValue) {
+    if (!sizeValue) return Number.MAX_SAFE_INTEGER;
+    const raw = String(sizeValue).trim().toUpperCase();
+    const matched = raw.match(/(\d+(?:\.\d+)?)\s*(MB|GB|TB)/i);
+    if (!matched) return Number.MAX_SAFE_INTEGER;
+
+    const numeric = parseFloat(matched[1]);
+    const unit = matched[2].toUpperCase();
+
+    if (Number.isNaN(numeric)) return Number.MAX_SAFE_INTEGER;
+    if (unit === 'MB') return numeric;
+    if (unit === 'GB') return numeric * 1024;
+    if (unit === 'TB') return numeric * 1024 * 1024;
+    return Number.MAX_SAFE_INTEGER;
+}
+
+function sortBundlesBySizeAsc(bundles) {
+    return [...(bundles || [])].sort((a, b) => {
+        const sizeA = parseBundleSizeToMB(a.size);
+        const sizeB = parseBundleSizeToMB(b.size);
+
+        if (sizeA !== sizeB) return sizeA - sizeB;
+
+        const nameA = String(a.name || '');
+        const nameB = String(b.name || '');
+        const byName = nameA.localeCompare(nameB);
+        if (byName !== 0) return byName;
+
+        return Number(a.id || 0) - Number(b.id || 0);
+    });
+}
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Customer portal loaded');
@@ -247,9 +279,10 @@ async function loadBundles() {
         }
 
         const bundles = await response.json();
-        console.log('Loaded bundles:', bundles);
+        const sortedBundles = sortBundlesBySizeAsc(bundles);
+        console.log('Loaded bundles (sorted by size):', sortedBundles);
 
-        displayBundles(bundles);
+        displayBundles(sortedBundles);
     } catch (error) {
         showCleanError('Loading bundles failed', error, 'Failed to load bundles. Please try again.');
     }

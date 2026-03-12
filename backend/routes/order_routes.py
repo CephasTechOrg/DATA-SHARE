@@ -11,6 +11,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+router = APIRouter(prefix="/orders", tags=["Orders"])
+
 def send_sms(phone_number, message):
     """
     SMS sending function - replace with actual SMS provider integration

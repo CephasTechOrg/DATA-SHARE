@@ -163,7 +163,7 @@ function setupEventListeners() {
     }
 
     // Search functionality
-    const searchInputs = ['bundleSearch', 'orderSearch', 'paymentSearch'];
+    const searchInputs = ['bundleSearch', 'orderSearch', 'paymentSearch', 'historySearch'];
     searchInputs.forEach(id => {
         const input = document.getElementById(id);
         if (input) {
@@ -298,12 +298,29 @@ function switchTab(tabName) {
         case 'payments':
             loadPayments();
             break;
+        case 'history':
+            loadHistory();
+            break;
     }
 
     // Close sidebar on mobile after navigation
     if (window.innerWidth <= 1024) {
         toggleSidebar();
     }
+}
+
+// Step 1 placeholder: History tab loader (full implementation in Step 2)
+function loadHistory() {
+    const tableBody = document.getElementById('historyTable');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-light);">
+                History view is ready. Data rendering will be added in Step 2.
+            </td>
+        </tr>
+    `;
 }
 
 // Enhanced dashboard loading with animations
